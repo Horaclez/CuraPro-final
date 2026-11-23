@@ -16,4 +16,12 @@ for (const [url, name] of libs) {
   console.log('OK', name);
 }
 await writeFile('www/index.html', html);
+try {
+  let sw = await readFile('www/sw.js', 'utf8');
+  sw = sw.replace(
+    "'icon-512.png'",
+    "'icon-512.png','vendor/tailwind.js','vendor/react.js','vendor/react-dom.js','vendor/htm.js'"
+  );
+  await writeFile('www/sw.js', sw);
+} catch (e) {}
 console.log('Listo: la app ya no depende de internet.');
