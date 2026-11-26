@@ -1,4 +1,4 @@
-// Descarga las librerías del CDN a www/vendor para uso 100% offline (Electron / Capacitor / PWA).
+// Descarga las librerías del CDN a www/vendor para que la app funcione 100% sin internet.
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 const libs = [
   ['https://cdn.tailwindcss.com/3.4.17', 'tailwind.js'],
@@ -9,19 +9,14 @@ const libs = [
 await mkdir('www/vendor', { recursive: true });
 let html = await readFile('www/index.html', 'utf8');
 for (const [url, name] of libs) {
+  if (!html.includes(url)) throw new Error('No se encontró en index.html: ' + url);
   const res = await fetch(url);
-  if (!res.ok) throw new Error('Fallo ' + url);
-  await writeFile('www/vendor/' + name, Buffer.from(await res.arrayBuffer()));
+  if (!res.ok) throw new Error('Fallo la descarga (' + res.status + '): ' + url);
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.length < 1000) throw new Error('Archivo sospechosamente pequeño: ' + url);
+  await writeFile('www/vendor/' + name, buf);
   html = html.replace(url, 'vendor/' + name);
-  console.log('OK', name);
+  console.log('OK', name, buf.length, 'bytes');
 }
 await writeFile('www/index.html', html);
-try {
-  let sw = await readFile('www/sw.js', 'utf8');
-  sw = sw.replace(
-    "'icon-512.png'",
-    "'icon-512.png','vendor/tailwind.js','vendor/react.js','vendor/react-dom.js','vendor/htm.js'"
-  );
-  await writeFile('www/sw.js', sw);
-} catch (e) {}
 console.log('Listo: la app ya no depende de internet.');

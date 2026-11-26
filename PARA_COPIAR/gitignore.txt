@@ -1,0 +1,7 @@
+node_modules/
+dist/
+android/
+www/vendor/
+*.log
+.DS_Store
+Thumbs.db
